@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>15M TIMER</title>
+  <style>
+    body {
+      background: transparent;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .window {
+      width: 300px;
+      height: 180px;
+      background: #ffffff;
+      border: 2px solid black;
+      box-shadow: 1px 1px 0 #999;
+    }
+
+    .title-bar {
+      height: 28px;
+      background: black;
+      color: #f8f8f8;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title-bar .buttons {
+      display: flex;
+      gap: 4px;
+      padding-right: 5px;
+    }
+
+    .title-bar button {
+      background: white;
+      border: none;
+      width: 16px;
+      height: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .title-bar span {
+      padding: 4px;
+      padding-left: 6px;
+    }
+
+    .content {
+      padding: 5px;
+      height: calc(100% - 28px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .timer-box {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: white;
+      box-sizing: border-box;
+      overflow: hidden;
+      display: none;
+    }
+
+    .gauge {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: black;
+      border-radius: 5px;
+      transition: width 1s linear;
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 60px;
+      font-weight: bold;
+      color: white;
+      mix-blend-mode: difference;
+    }
+
+    .start-button {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      border: 2px solid black;
+      background: black;
+      transition: background 0.2s;
+    }
+
+    .start-button:hover {
+      background: #eee;
+      color: black;
+    }
+
+    .message-box {
+      display: none;
+      text-align: center;
+      font-size: 14px;
+      color: black;
+      font-weight: bold;
+      animation: fadeIn 1s ease forwards;
+      padding: 10px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="window">
+    <div class="title-bar">
+      <span>♥︎ 15M TIMER ♥︎</span>
+      <div class="buttons">
+        <button id="pauseBtn" title="일시정지 / 다시 시작">♥︎</button>
+        <button id="resetBtn" title="타이머 리셋">✕</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- 시작 전 버튼 -->
+      <button class="start-button" id="startBtn">♥︎ 15분 집중 시작하기 ♥︎</button>
+
+      <!-- 타이머 박스 -->
+      <div class="timer-box" id="timerBox">
+        <div class="gauge" id="gauge"></div>
+        <div class="timer-text" id="time"></div>
+      </div>
+
+      <!-- 타이머 종료 메시지 -->
+      <div class="message-box" id="doneMessage">
+        🎉 축하합니다!<br>내일은 15분 달성이 더욱 쉬워질 거예요! 🎉
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const totalSeconds = 15 * 60;
+    let current = totalSeconds;
+    let interval = null;
+    let isRunning = false;
+
+    const startBtn = document.getElementById('startBtn');
+    const timerBox = document.getElementById('timerBox');
+    const gauge = document.getElementById('gauge');
+    const timeText = document.getElementById('time');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const doneMessage = document.getElementById('doneMessage');
+
+    function formatTime(seconds) {
+      const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const s = String(seconds % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function update() {
+      const percentage = (current / totalSeconds) * 100;
+      gauge.style.width = `${percentage}%`;
+      timeText.innerText = formatTime(current);
+    }
+
+    function startTimer() {
+      if (interval) return;
+      interval = setInterval(() => {
+        if (current <= 0) {
+          clearInterval(interval);
+          interval = null;
+          isRunning = false;
+          showCompletionMessage();
+          return;
+        }
+        current--;
+        update();
+      }, 1000);
+      isRunning = true;
+    }
+
+    function pauseTimer() {
+      clearInterval(interval);
+      interval = null;
+      isRunning = false;
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      current = totalSeconds;
+      update();
+      timerBox.style.display = 'none';
+      startBtn.style.display = 'inline-block';
+      doneMessage.style.display = 'none';
+    }
+
+    function showCompletionMessage() {
+      timerBox.style.display = 'none';
+      doneMessage.style.display = 'block';
+    }
+
+    // 시작 버튼 클릭
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = 'none';
+      timerBox.style.display = 'block';
+      doneMessage.style.display = 'none';
+      current = totalSeconds;
+      update();
+      startTimer();
+    });
+
+    // 일시정지 / 재시작
+    pauseBtn.addEventListener('click', () => {
+      if (isRunning) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
+    });
+
+    // 리셋
+    resetBtn.addEventListener('click', resetTimer);
+
+    // 초기 상태
+    update();
+  </script>
+</body>
+</html>
